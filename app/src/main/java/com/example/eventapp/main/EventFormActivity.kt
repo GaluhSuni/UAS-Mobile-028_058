@@ -17,21 +17,24 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.eventapp.event.EventApi
 import com.example.eventapp.event.Event
-import com.example.eventapp.event.ApiResponse
-import com.example.eventapp.event.Stats
-import com.example.eventapp.MainActivity
+import com.example.eventapp.ui.theme.EventAppTheme
+import androidx.compose.ui.platform.LocalContext
 
 class EventFormActivity : ComponentActivity() {
 
     private val eventApi = EventApi.create()
     private var eventId: String? = null
+    private var isEditMode = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Ambil data dari Intent (untuk edit)
         eventId = intent.getStringExtra("EVENT_ID")
+        isEditMode = !eventId.isNullOrBlank()
+
         val initialTitle = intent.getStringExtra("TITLE") ?: ""
-        val initialDate = intent.getStringExtra("DATE") ?: "2025-12-15"  // Update ke tanggal masa depan
+        val initialDate = intent.getStringExtra("DATE") ?: "2025-12-15"
         val initialTime = intent.getStringExtra("TIME") ?: "09:00:00"
         val initialLocation = intent.getStringExtra("LOCATION") ?: ""
         val initialDescription = intent.getStringExtra("DESCRIPTION") ?: ""
@@ -39,23 +42,27 @@ class EventFormActivity : ComponentActivity() {
         val initialStatus = intent.getStringExtra("STATUS") ?: "upcoming"
 
         setContent {
-            MaterialTheme {
-                EventForm(
-                    initialTitle = initialTitle,
-                    initialDate = initialDate,
-                    initialTime = initialTime,
-                    initialLocation = initialLocation,
-                    initialDescription = initialDescription,
-                    initialCapacity = initialCapacity,
-                    initialStatus = initialStatus,
-                    onSave = { event ->
-                        if (eventId == null) {
-                            createEvent(event)
-                        } else {
-                            updateEvent(eventId!!, event)
-                        }
-                    }
-                )
+            EventAppTheme {  // Gunakan theme yang sama
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    EventForm(
+                        isEditMode = isEditMode,
+                        initialTitle = initialTitle,
+                        initialDate = initialDate,
+                        initialTime = initialTime,
+                        initialLocation = initialLocation,
+                        initialDescription = initialDescription,
+                        initialCapacity = initialCapacity,
+                        initialStatus = initialStatus,
+                        onSave = { event ->
+                            if (isEditMode && eventId != null) {
+                                updateEvent(eventId!!, event)
+                            } else {
+                                createEvent(event)
+                            }
+                        },
+                        onCancel = { finish() }
+                    )
+                }
             }
         }
     }
@@ -66,15 +73,15 @@ class EventFormActivity : ComponentActivity() {
                 val response = eventApi.createEvent(event)
                 withContext(Dispatchers.Main) {
                     if (response.status == 201) {
-                        Toast.makeText(this@EventFormActivity, "Event dibuat", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Event berhasil dibuat", Toast.LENGTH_SHORT).show()
                         finish()
                     } else {
-                        Toast.makeText(this@EventFormActivity, response.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EventFormActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EventFormActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -86,15 +93,15 @@ class EventFormActivity : ComponentActivity() {
                 val response = eventApi.updateEvent(id, event)
                 withContext(Dispatchers.Main) {
                     if (response.status == 200) {
-                        Toast.makeText(this@EventFormActivity, "Event diupdate", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Event berhasil diupdate", Toast.LENGTH_SHORT).show()
                         finish()
                     } else {
-                        Toast.makeText(this@EventFormActivity, response.message, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@EventFormActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@EventFormActivity, "Error: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -104,6 +111,7 @@ class EventFormActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventForm(
+    isEditMode: Boolean,
     initialTitle: String,
     initialDate: String,
     initialTime: String,
@@ -111,16 +119,19 @@ fun EventForm(
     initialDescription: String,
     initialCapacity: String,
     initialStatus: String,
-    onSave: (Event) -> Unit
+    onSave: (Event) -> Unit,
+    onCancel: () -> Unit
 ) {
     var title by remember { mutableStateOf(initialTitle) }
     var date by remember { mutableStateOf(initialDate) }
     var time by remember { mutableStateOf(initialTime) }
     var location by remember { mutableStateOf(initialLocation) }
     var description by remember { mutableStateOf(initialDescription) }
-    var capacity by remember { mutableStateOf(initialCapacity) }
+    var capacityText by remember { mutableStateOf(initialCapacity) }
     var status by remember { mutableStateOf(initialStatus) }
     var expanded by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     val statuses = listOf("upcoming", "ongoing", "completed", "cancelled")
 
@@ -130,40 +141,79 @@ fun EventForm(
             .padding(16.dp)
             .verticalScroll(rememberScrollState())
     ) {
-        TextField(value = title, onValueChange = { title = it }, label = { Text("Title") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = date, onValueChange = { date = it }, label = { Text("Date (YYYY-MM-DD)") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = time, onValueChange = { time = it }, label = { Text("Time (HH:MM:SS)") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = location, onValueChange = { location = it }, label = { Text("Location") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
-        Spacer(modifier = Modifier.height(8.dp))
-        TextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Capacity") })
-        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = if (isEditMode) "Edit Event" else "Tambah Event",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Judul Event *") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = date,
+            onValueChange = { date = it },
+            label = { Text("Tanggal (YYYY-MM-DD) *") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = time,
+            onValueChange = { time = it },
+            label = { Text("Waktu (HH:MM:SS) *") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = location,
+            onValueChange = { location = it },
+            label = { Text("Lokasi *") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Deskripsi") },
+            modifier = Modifier.fillMaxWidth(),
+            minLines = 3
+        )
+        Spacer(Modifier.height(8.dp))
+
+        OutlinedTextField(
+            value = capacityText,
+            onValueChange = { capacityText = it },
+            label = { Text("Kapasitas (opsional)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+        Spacer(Modifier.height(8.dp))
 
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            onExpandedChange = { expanded = it }
         ) {
-            TextField(
+            OutlinedTextField(
                 readOnly = true,
                 value = status,
                 onValueChange = { },
                 label = { Text("Status") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.menuAnchor()
+                modifier = Modifier.menuAnchor().fillMaxWidth()
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                statuses.forEach { selectionOption ->
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                statuses.forEach { option ->
                     DropdownMenuItem(
-                        text = { Text(selectionOption) },
+                        text = { Text(option) },
                         onClick = {
-                            status = selectionOption
+                            status = option
                             expanded = false
                         }
                     )
@@ -171,24 +221,36 @@ fun EventForm(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = {
-            if (title.isBlank() || date.isBlank() || time.isBlank() || location.isBlank()) {
-                // Validasi sederhana
-                return@Button
+        Spacer(Modifier.height(24.dp))
+
+        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = onCancel) {
+                Text("Batal")
             }
-            val event = Event(
-                title = title,
-                date = date,
-                time = time,
-                location = location,
-                description = description,
-                capacity = capacity.toIntOrNull(),
-                status = status
-            )
-            onSave(event)
-        }) {
-            Text("Simpan")
+            Spacer(Modifier.width(8.dp))
+            Button(onClick = {
+                if (title.isBlank() || date.isBlank() || time.isBlank() || location.isBlank()) {
+                    Toast.makeText(context, "Harap isi semua kolom wajib", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                val capacityInt = capacityText.toIntOrNull()
+
+                val event = Event(
+                    id = null,
+                    title = title.trim(),
+                    date = date.trim(),
+                    time = time.trim(),
+                    location = location.trim(),
+                    description = description.trim().ifBlank { null },
+                    capacity = capacityInt,
+                    status = status
+                )
+
+                onSave(event)
+            }) {
+                Text(if (isEditMode) "Update" else "Simpan")
+            }
         }
     }
 }

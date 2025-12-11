@@ -105,15 +105,16 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun editEvent(event: Event) {
-        val intent = Intent(this, EventFormActivity::class.java)
-        intent.putExtra("EVENT_ID", event.id)
-        intent.putExtra("TITLE", event.title)
-        intent.putExtra("DATE", event.date)
-        intent.putExtra("TIME", event.time)
-        intent.putExtra("LOCATION", event.location)
-        intent.putExtra("DESCRIPTION", event.description)
-        intent.putExtra("CAPACITY", event.capacity?.toString())
-        intent.putExtra("STATUS", event.status)
+        val intent = Intent(this, EventFormActivity::class.java).apply {
+            putExtra("EVENT_ID", event.id)
+            putExtra("TITLE", event.title)
+            putExtra("DATE", event.date)
+            putExtra("TIME", event.time)
+            putExtra("LOCATION", event.location)
+            putExtra("DESCRIPTION", event.description ?: "")
+            putExtra("CAPACITY", event.capacity?.toString() ?: "")
+            putExtra("STATUS", event.status ?: "upcoming")
+        }
         startActivity(intent)
     }
 
