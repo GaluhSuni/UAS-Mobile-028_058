@@ -1,14 +1,14 @@
 package com.example.eventapp.event
 
+import com.google.gson.annotations.SerializedName
+
 data class Event(
-    val id: String? = null,
-    val title: String,
-    val date: String,
-    val time: String,
-    val location: String,
-    val description: String? = null,
-    val capacity: Int? = null,
-    val status: String,
-    val created_at: String? = null,
-    val updated_at: String? = null
+    @SerializedName("id")          val id: String? = null,        // HARUS BISA NULL!
+    @SerializedName("title")       val title: String,
+    @SerializedName("date")         val date: String,
+    @SerializedName("time")         val time: String,
+    @SerializedName("location")     val location: String,
+    @SerializedName("description")  val description: String? = null,
+    @SerializedName("capacity")     val capacity: Int? = null,
+    @SerializedName("status")       val status: String = "upcoming"
 )

@@ -54,6 +54,8 @@ class EventFormActivity : ComponentActivity() {
                         initialCapacity = initialCapacity,
                         initialStatus = initialStatus,
                         onSave = { event ->
+                            // Log dulu biar tahu sampai sini atau tidak
+                            android.util.Log.d("EventForm", "Event akan disimpan: $event")
                             if (isEditMode && eventId != null) {
                                 updateEvent(eventId!!, event)
                             } else {
@@ -237,16 +239,15 @@ fun EventForm(
                 val capacityInt = capacityText.toIntOrNull()
 
                 val event = Event(
-                    id = null,
+                    id = null,                                    // PASTI null, jangan pakai eventId di sini
                     title = title.trim(),
                     date = date.trim(),
                     time = time.trim(),
                     location = location.trim(),
                     description = description.trim().ifBlank { null },
-                    capacity = capacityInt,
+                    capacity = capacityText.toIntOrNull(),
                     status = status
                 )
-
                 onSave(event)
             }) {
                 Text(if (isEditMode) "Update" else "Simpan")
