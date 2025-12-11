@@ -27,7 +27,10 @@ class EventFormActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+<<<<<<< HEAD
         // Ambil data dari Intent (jika edit)
+=======
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
         eventId = intent.getStringExtra("EVENT_ID")
         val initTitle = intent.getStringExtra("TITLE") ?: ""
         val initDate = intent.getStringExtra("DATE") ?: ""
@@ -38,6 +41,7 @@ class EventFormActivity : ComponentActivity() {
         val initStatus = intent.getStringExtra("STATUS") ?: "upcoming"
 
         setContent {
+<<<<<<< HEAD
             MaterialTheme {
                 EventFormScreen(
                     eventId = eventId,
@@ -53,6 +57,30 @@ class EventFormActivity : ComponentActivity() {
                         else updateEvent(eventId!!, title, date, time, loc, desc, cap, status)
                     }
                 )
+=======
+            EventAppTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    EventForm(
+                        isEditMode = isEditMode,
+                        eventId = eventId,                          // ← BARU: kirim ID ke composable
+                        initialTitle = initialTitle,
+                        initialDate = initialDate,
+                        initialTime = initialTime,
+                        initialLocation = initialLocation,
+                        initialDescription = initialDescription,
+                        initialCapacity = initialCapacity,
+                        initialStatus = initialStatus,
+                        onSave = { event ->
+                            if (isEditMode && eventId != null) {
+                                updateEvent(eventId!!, event)
+                            } else {
+                                createEvent(event)
+                            }
+                        },
+                        onCancel = { finish() }
+                    )
+                }
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
             }
         }
     }
@@ -76,10 +104,18 @@ class EventFormActivity : ComponentActivity() {
                 val response = eventApi.createEvent(event)
                 withContext(Dispatchers.Main) {
                     if (response.status == 201) {
+<<<<<<< HEAD
                         Toast.makeText(this@EventFormActivity, "Event dibuat", Toast.LENGTH_SHORT).show()
                         finish()
                     } else {
                         Toast.makeText(this@EventFormActivity, response.message, Toast.LENGTH_SHORT).show()
+=======
+                        Toast.makeText(this@EventFormActivity, "Event berhasil dibuat", Toast.LENGTH_SHORT).show()
+                        setResult(RESULT_OK)
+                        finish()
+                    } else {
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_LONG).show()
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
                     }
                 }
             } catch (e: Exception) {
@@ -109,10 +145,18 @@ class EventFormActivity : ComponentActivity() {
                 val response = eventApi.updateEvent(id, event)
                 withContext(Dispatchers.Main) {
                     if (response.status == 200) {
+<<<<<<< HEAD
                         Toast.makeText(this@EventFormActivity, "Event diupdate", Toast.LENGTH_SHORT).show()
                         finish()
                     } else {
                         Toast.makeText(this@EventFormActivity, response.message, Toast.LENGTH_SHORT).show()
+=======
+                        Toast.makeText(this@EventFormActivity, "Event berhasil diupdate", Toast.LENGTH_SHORT).show()
+                        setResult(RESULT_OK)
+                        finish()
+                    } else {
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_LONG).show()
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
                     }
                 }
             } catch (e: Exception) {
@@ -143,8 +187,14 @@ class EventFormActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+<<<<<<< HEAD
 fun EventFormScreen(
     eventId: String?,
+=======
+fun EventForm(
+    isEditMode: Boolean,
+    eventId: String?,                                          // ← BARU
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
     initialTitle: String,
     initialDate: String,
     initialTime: String,
@@ -163,6 +213,10 @@ fun EventFormScreen(
     var status by remember { mutableStateOf(initialStatus) }
     var expanded by remember { mutableStateOf(false) }
 
+<<<<<<< HEAD
+=======
+    val context = LocalContext.current
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
     val statuses = listOf("upcoming", "ongoing", "completed", "cancelled")
 
     Column(
@@ -174,6 +228,7 @@ fun EventFormScreen(
         Text(text = if (eventId == null) "Tambah Event" else "Edit Event", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.height(16.dp))
 
+<<<<<<< HEAD
         OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Title") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
         OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Date (YYYY-MM-DD)") }, modifier = Modifier.fillMaxWidth())
@@ -188,6 +243,22 @@ fun EventFormScreen(
         Spacer(Modifier.height(8.dp))
 
         ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+=======
+        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Judul Event *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Tanggal (YYYY-MM-DD) *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("Waktu (HH:MM:SS) *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Lokasi *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Deskripsi") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = capacityText, onValueChange = { capacityText = it }, label = { Text("Kapasitas (opsional)") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
             OutlinedTextField(
                 readOnly = true,
                 value = status,
@@ -197,12 +268,21 @@ fun EventFormScreen(
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+<<<<<<< HEAD
                 statuses.forEach {
                     DropdownMenuItem(text = { Text(it) }, onClick = { status = it; expanded = false })
+=======
+                statuses.forEach { option ->
+                    DropdownMenuItem(text = { Text(option) }, onClick = {
+                        status = option
+                        expanded = false
+                    })
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
                 }
             }
         }
 
+<<<<<<< HEAD
         Spacer(Modifier.height(24.dp))
         Button(
             onClick = {
@@ -214,6 +294,40 @@ fun EventFormScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("SIMPAN")
+=======
+        Spacer(Modifier.height(32.dp))
+
+        Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = onCancel) { Text("Batal") }
+            Spacer(Modifier.width(12.dp))
+            Button(onClick = {
+                // Validasi ketat dengan trim()
+                val tTitle = title.trim()
+                val tDate = date.trim()
+                val tTime = time.trim()
+                val tLocation = location.trim()
+
+                if (tTitle.isBlank() || tDate.isBlank() || tTime.isBlank() || tLocation.isBlank()) {
+                    Toast.makeText(context, "Harap isi semua kolom wajib!", Toast.LENGTH_SHORT).show()
+                    return@Button
+                }
+
+                val event = Event(
+                    id = if (isEditMode) eventId else null,   // INI YANG PALING PENTING!
+                    title = tTitle,
+                    date = tDate,
+                    time = tTime,
+                    location = tLocation,
+                    description = description.trim().ifBlank { null },
+                    capacity = capacityText.toIntOrNull(),
+                    status = status
+                )
+
+                onSave(event)
+            }) {
+                Text(if (isEditMode) "Update" else "Simpan")
+            }
+>>>>>>> 175d5b5905157f5b03ce614e95827d6e60b7ecf6
         }
     }
 }
