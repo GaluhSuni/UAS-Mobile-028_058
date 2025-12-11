@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- Izinkan cleartext hanya ke server kita -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">104.248.153.158</domain>
+    </domain-config>
+
+    <!-- Untuk jaga-jaga jika pakai domain (bukan IP) di masa depan -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
