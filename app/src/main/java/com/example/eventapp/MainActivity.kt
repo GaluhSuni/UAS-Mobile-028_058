@@ -105,6 +105,11 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun editEvent(event: Event) {
+        if (event.id == null) {
+            Toast.makeText(this, "Error: Event tidak memiliki ID", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         val intent = Intent(this, EventFormActivity::class.java).apply {
             putExtra("EVENT_ID", event.id)
             putExtra("TITLE", event.title)
@@ -113,7 +118,7 @@ class MainActivity : ComponentActivity() {
             putExtra("LOCATION", event.location)
             putExtra("DESCRIPTION", event.description ?: "")
             putExtra("CAPACITY", event.capacity?.toString() ?: "")
-            putExtra("STATUS", event.status ?: "upcoming")
+            putExtra("STATUS", event.status)
         }
         startActivity(intent)
     }
@@ -140,7 +145,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        fetchEvents()
+        fetchEvents()          // Ini sudah ada, cukup pastikan ada
     }
 }
 

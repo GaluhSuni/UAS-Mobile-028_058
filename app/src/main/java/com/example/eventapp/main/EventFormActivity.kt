@@ -29,7 +29,6 @@ class EventFormActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Ambil data dari Intent (untuk edit)
         eventId = intent.getStringExtra("EVENT_ID")
         isEditMode = !eventId.isNullOrBlank()
 
@@ -42,10 +41,11 @@ class EventFormActivity : ComponentActivity() {
         val initialStatus = intent.getStringExtra("STATUS") ?: "upcoming"
 
         setContent {
-            EventAppTheme {  // Gunakan theme yang sama
+            EventAppTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     EventForm(
                         isEditMode = isEditMode,
+                        eventId = eventId,                          // ← BARU: kirim ID ke composable
                         initialTitle = initialTitle,
                         initialDate = initialDate,
                         initialTime = initialTime,
@@ -54,8 +54,6 @@ class EventFormActivity : ComponentActivity() {
                         initialCapacity = initialCapacity,
                         initialStatus = initialStatus,
                         onSave = { event ->
-                            // Log dulu biar tahu sampai sini atau tidak
-                            android.util.Log.d("EventForm", "Event akan disimpan: $event")
                             if (isEditMode && eventId != null) {
                                 updateEvent(eventId!!, event)
                             } else {
@@ -76,9 +74,10 @@ class EventFormActivity : ComponentActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.status == 201) {
                         Toast.makeText(this@EventFormActivity, "Event berhasil dibuat", Toast.LENGTH_SHORT).show()
+                        setResult(RESULT_OK)
                         finish()
                     } else {
-                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
@@ -96,9 +95,10 @@ class EventFormActivity : ComponentActivity() {
                 withContext(Dispatchers.Main) {
                     if (response.status == 200) {
                         Toast.makeText(this@EventFormActivity, "Event berhasil diupdate", Toast.LENGTH_SHORT).show()
+                        setResult(RESULT_OK)
                         finish()
                     } else {
-                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@EventFormActivity, "Gagal: ${response.message}", Toast.LENGTH_LONG).show()
                     }
                 }
             } catch (e: Exception) {
@@ -114,6 +114,7 @@ class EventFormActivity : ComponentActivity() {
 @Composable
 fun EventForm(
     isEditMode: Boolean,
+    eventId: String?,                                          // ← BARU
     initialTitle: String,
     initialDate: String,
     initialTime: String,
@@ -133,8 +134,7 @@ fun EventForm(
     var status by remember { mutableStateOf(initialStatus) }
     var expanded by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current   // INI YANG HARUS DITAMBAHKAN
-
+    val context = LocalContext.current
     val statuses = listOf("upcoming", "ongoing", "completed", "cancelled")
 
     Column(
@@ -149,105 +149,66 @@ fun EventForm(
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        OutlinedTextField(
-            value = title,
-            onValueChange = { title = it },
-            label = { Text("Judul Event *") },
-            modifier = Modifier.fillMaxWidth()
-        )
+        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Judul Event *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = date, onValueChange = { date = it }, label = { Text("Tanggal (YYYY-MM-DD) *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = time, onValueChange = { time = it }, label = { Text("Waktu (HH:MM:SS) *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = location, onValueChange = { location = it }, label = { Text("Lokasi *") }, modifier = Modifier.fillMaxWidth())
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = description, onValueChange = { description = it }, label = { Text("Deskripsi") }, modifier = Modifier.fillMaxWidth(), minLines = 3)
+        Spacer(Modifier.height(8.dp))
+        OutlinedTextField(value = capacityText, onValueChange = { capacityText = it }, label = { Text("Kapasitas (opsional)") }, modifier = Modifier.fillMaxWidth())
         Spacer(Modifier.height(8.dp))
 
-        OutlinedTextField(
-            value = date,
-            onValueChange = { date = it },
-            label = { Text("Tanggal (YYYY-MM-DD) *") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = time,
-            onValueChange = { time = it },
-            label = { Text("Waktu (HH:MM:SS) *") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = location,
-            onValueChange = { location = it },
-            label = { Text("Lokasi *") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text("Deskripsi") },
-            modifier = Modifier.fillMaxWidth(),
-            minLines = 3
-        )
-        Spacer(Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = capacityText,
-            onValueChange = { capacityText = it },
-            label = { Text("Kapasitas (opsional)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(8.dp))
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it }
-        ) {
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
             OutlinedTextField(
                 readOnly = true,
                 value = status,
-                onValueChange = { },
+                onValueChange = {},
                 label = { Text("Status") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                 modifier = Modifier.menuAnchor().fillMaxWidth()
             )
             ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 statuses.forEach { option ->
-                    DropdownMenuItem(
-                        text = { Text(option) },
-                        onClick = {
-                            status = option
-                            expanded = false
-                        }
-                    )
+                    DropdownMenuItem(text = { Text(option) }, onClick = {
+                        status = option
+                        expanded = false
+                    })
                 }
             }
         }
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(32.dp))
 
         Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
-            TextButton(onClick = onCancel) {
-                Text("Batal")
-            }
-            Spacer(Modifier.width(8.dp))
+            TextButton(onClick = onCancel) { Text("Batal") }
+            Spacer(Modifier.width(12.dp))
             Button(onClick = {
-                if (title.isBlank() || date.isBlank() || time.isBlank() || location.isBlank()) {
-                    Toast.makeText(context, "Harap isi semua kolom wajib", Toast.LENGTH_SHORT).show()
+                // Validasi ketat dengan trim()
+                val tTitle = title.trim()
+                val tDate = date.trim()
+                val tTime = time.trim()
+                val tLocation = location.trim()
+
+                if (tTitle.isBlank() || tDate.isBlank() || tTime.isBlank() || tLocation.isBlank()) {
+                    Toast.makeText(context, "Harap isi semua kolom wajib!", Toast.LENGTH_SHORT).show()
                     return@Button
                 }
 
-                val capacityInt = capacityText.toIntOrNull()
-
                 val event = Event(
-                    id = null,                                    // PASTI null, jangan pakai eventId di sini
-                    title = title.trim(),
-                    date = date.trim(),
-                    time = time.trim(),
-                    location = location.trim(),
+                    id = if (isEditMode) eventId else null,   // INI YANG PALING PENTING!
+                    title = tTitle,
+                    date = tDate,
+                    time = tTime,
+                    location = tLocation,
                     description = description.trim().ifBlank { null },
                     capacity = capacityText.toIntOrNull(),
                     status = status
                 )
+
                 onSave(event)
             }) {
                 Text(if (isEditMode) "Update" else "Simpan")
