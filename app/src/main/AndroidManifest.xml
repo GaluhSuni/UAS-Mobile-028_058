@@ -27,6 +27,12 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- TAMBAHKAN BARIS INI -->
+        <activity
+                android:name=".main.EventFormActivity"
+                android:exported="false" />
+
     </application>
 
 </manifest>
